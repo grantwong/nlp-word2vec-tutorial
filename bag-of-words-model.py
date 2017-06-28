@@ -54,6 +54,9 @@ def cleanReview(rawReview):
 
     Args:
         rawReview (str): Uncleaned review to be cleaned.
+
+    Returns:
+        str: Review cleaned in accordance with requirements above.
     """
     from bs4 import BeautifulSoup
     from nltk.corpus import stopwords
