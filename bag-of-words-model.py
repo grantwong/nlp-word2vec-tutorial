@@ -4,8 +4,40 @@ def main():
 			quoting=3)
     print("Training Data Properties: shape={}, headings={}\n").format(\
         trainData.shape, trainData.columns.values)
-    #testReviewCleaning(trainData)
     cleanAllReviews(trainData)
+    print(createBagOfWords(trainData['review']).shape)
+
+def createBagOfWords(cleanTrainReviews):
+    """ Return a bag-of-words model for training data.
+
+    The bag-of-words model associates a review with a features vector composed
+    of 5000 integers each representing the frequency of one of the words found
+    in the feature vector in a review. The feature vector is composed of the
+    top 5000 highest frequency words out of the vocabulary of all reviews.
+
+    We choose to limit the feature vector to 5000 words .
+
+    Args:
+        cleanTrainReviews (array): 1-D array, all cleaned training reviews.
+
+    Returns:
+        array: 2-D feature matrix, a row for each review, 5000 columns for
+            each feature word, a cell contains an integer frequency for the
+            feature word at column j in review i. Document-feature-word matrix.
+    Note:
+        CountVectorizer can perform data preprocessing, tokenization, and
+        stop-word removal by passing callable functions. Instead, in this
+        module are preprocessing functions we wrote.
+    """
+    from sklearn.feature_extraction.text import CountVectorizer
+    # CountVectorizer represents bag-of-words model.
+    #   fit_transform() performs fitting (i.e. build vocabulary feature vector)
+    #   then transforms the passed list of reviews into a
+    #   review-feature-word matrix.
+    vectorizer = CountVectorizer(analyzer="word", tokenizer=None,\
+                    preprocessor=None, stop_words=None, max_features=5000)
+    trainDataFeatures = vectorizer.fit_transform(cleanTrainReviews)
+    return trainDataFeatures.toarray()
 
 def testReviewCleaning(trainData):
     """ Print a random movie review before and after cleaning.
@@ -42,7 +74,7 @@ def cleanAllReviews(trainData):
     for i in range(len(trainData.index)):
             sys.stdout.flush()
             trainData.set_value(i, 'review', \
-            cleanReview(trainData.get_value(i, 'review')))
+                cleanReview(trainData.get_value(i, 'review')))
             print("\rReview of {} of {} cleaned.").format(i,\
                 len(trainData.index)-1),
 
