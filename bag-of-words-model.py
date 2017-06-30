@@ -5,7 +5,36 @@ def main():
     print("Training Data Properties: shape={}, headings={}\n").format(\
         trainData.shape, trainData.columns.values)
     cleanAllReviews(trainData)
-    print(createBagOfWords(trainData['review']).shape)
+    trainDataFeatures = createBagOfWords(trainData['review'])
+    trainRandomForest(trainDataFeatures, trainData['sentiment'])
+
+def trainRandomForest(trainDataFeatures, trainDataSentiment):
+    """ Return a Random Forest Classifier.
+
+    The Classifier is trained on the Bag-of-Words feature vector and
+    sentiment value of each training review.
+
+    First, the training algorithm creates 100 samples, of size n', of the
+    training data, of size n, n' < n, with replacement. Then a classification
+    tree is fit to each sample. A new unlabelled dataset will recieve a
+    sentiment from each tree and the mode sentiment is taken.
+
+    Args:
+        trainDataFeatures (array): 2-D review-features matrix, 25000 by 5000.
+        trainDataSentiment (array): 2-D review-sentiment matrix, 25000 by 1.
+
+    Note:
+        Understanding of Random Forest Classifier required.
+        Current understanding is poor.
+
+    Todo:
+        * Write comments describing Random Forest algorithm.
+    """
+    from sklearn.ensemble import RandomForestClassifier
+    classifier = RandomForestClassifier(n_estimators=100)
+    print("Training Random Forest Classifier, please wait.")
+    classifier = forest.fit(trainDataFeatures, trainDataSentiment)
+    print("Training complete.")
 
 def createBagOfWords(cleanTrainReviews):
     """ Return a bag-of-words model for training data.
