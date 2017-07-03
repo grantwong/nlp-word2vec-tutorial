@@ -1,27 +1,97 @@
 def main():
-    import pandas as pd
-    trainData = pd.read_csv("labeledTrainData.tsv", header=0, delimiter="\t", \
-			quoting=3)
-    print("Training Data Properties: shape={}, headings={}\n").format(\
-        trainData.shape, trainData.columns.values)
-    cleanAllReviews(trainData)
+    # Fit Random Forest Classifier to training data.
+    trainData = csvToArray("cleanedLabeledTrainData.tsv")
+    #cleanAllReviews(trainData)
+    # Output cleaned training data, takes long to generate.
+    #outputDataFrame(trainData, "cleanedLabeledTrainData.tsv")
+    #print(trainData.columns.values)
     trainDataFeatures = createBagOfWords(trainData['review'])
-    trainRandomForest(trainDataFeatures, trainData['sentiment'])
+    rfClassifier = fitRandomForest(trainDataFeatures, trainData['sentiment'])
+    # Make predictions on test data with classifier.
+    testData = csvToArray("cleanedTestData.tsv")
+    #cleanAllReviews(testData)
+    testDataFeatures = createBagOfWords(testData['review'])
+    predictions = predictSentiments(rfClassifier, testDataFeatures)
+    print(predictions)
+    outputDataFrame(outputPrediction(testData['id'], predictions),\
+        "rfResultData.tsv")
+    # How acurrate is the classifier?
 
-def trainRandomForest(trainDataFeatures, trainDataSentiment):
-    """ Return a Random Forest Classifier.
+def outputDataFrame(data, fileName):
+    """ Output the CSV file of the data with passed file name.
 
-    The Classifier is trained on the Bag-of-Words feature vector and
-    sentiment value of each training review.
+    Args:
+        data (pandas.DataFrame)
+    """
+    import pandas
+    data.to_csv(fileName, sep='\t', quoting=3)
 
-    First, the training algorithm creates 100 samples, of size n', of the
-    training data, of size n, n' < n, with replacement. Then a classification
-    tree is fit to each sample. A new unlabelled dataset will recieve a
-    sentiment from each tree and the mode sentiment is taken.
+def outputPrediction(id, prediction):
+    """ Output the CSV file of the test predictions.
+
+    Args:
+        id (array): 1-D array of all test review id's.
+        prediction (array): 1-D array of the predictions made by the classifier
+            on the test reviews.
+    Returns:
+        output (pandas.DataFrame): 2-D matrix with 'id' and 'prediction'
+        columns.
+    """
+    import pandas
+    output = pandas.DataFrame(data={"id":id, "pSentiment": prediction})
+    output.to_csv("BagOfWordsModelTestPredictions.csv", index=False, quoting=3)
+    return output
+
+def csvToArray(csvFile):
+    """ Return the array representation of the CSV file.
+
+    The array is a DataFrame from the pandas module which has greater
+    functionality.
+
+    Args:
+        csvFile (str)
+
+    Returns:
+        dataArray (pandas.DataFrame)
+    """
+    import pandas
+    return  pandas.read_csv(csvFile, header=0, delimiter='\t', quoting=3)
+
+def predictSentiments(rfClassifier, testDataFeatures):
+    """ Return labeled test data.
+
+    Predict the sentiment for the test reviews using the fit Random Forest
+    classifier.
+
+    Args:
+        rfClassifier (sklearn.ensemble.RandomForestClassifier): Fit Random
+            Forest with 100 trees.
+        testDataFeatures (array): Array of 25000 bag-of-words model feature
+            vectors.
+
+    Returns:
+        predictions (array): Sentiment predictions of given test data
+            features.
+    """
+    return  rfClassifier.predict(testDataFeatures)
+
+def fitRandomForest(trainDataFeatures, trainDataSentiment):
+    """ Return the fit Random Forest Classifier.
+
+    Fits a decision tree to 100 sub-samples, prediction of each tree averaged
+    giving a final prediction.
+
+    Sub-samples have the same size as the training set. An element
+    selected for a sub-sample with replacement -- it may appear multiple
+    times.
 
     Args:
         trainDataFeatures (array): 2-D review-features matrix, 25000 by 5000.
         trainDataSentiment (array): 2-D review-sentiment matrix, 25000 by 1.
+
+    Returns:
+        rfClassifier (sklearn.ensemble.RandomForestClassifier): Fit Random
+            Forest with 100 trees.
 
     Note:
         Understanding of Random Forest Classifier required.
@@ -31,10 +101,11 @@ def trainRandomForest(trainDataFeatures, trainDataSentiment):
         * Write comments describing Random Forest algorithm.
     """
     from sklearn.ensemble import RandomForestClassifier
-    classifier = RandomForestClassifier(n_estimators=100)
+    rfClassifier = RandomForestClassifier(n_estimators=100)
     print("Training Random Forest Classifier, please wait.")
-    classifier = forest.fit(trainDataFeatures, trainDataSentiment)
+    rfClassifier = rfClassifier.fit(trainDataFeatures, trainDataSentiment)
     print("Training complete.")
+    return rfClassifier
 
 def createBagOfWords(cleanTrainReviews):
     """ Return a bag-of-words model for training data.
